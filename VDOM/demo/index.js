@@ -1,4 +1,4 @@
-import { createElement, createElement as h, render, diff, patch } from "vdom";
+import { createElement, createElement as h, render, diff } from "vdom";
 
 let state = { num: 5 };
 let timer;
@@ -27,12 +27,7 @@ function tick() {
   const newVDOM = view();
 
   // render(newVDOM, renderRoot)
-  const patchObj = diff(preVDom, newVDOM);
-  console.log(patchObj);
-
-  preVDom = newVDOM;
-
-  patch(renderRoot, patchObj);
+  diff(preVDom, newVDOM, renderRoot, preVDom);
 }
 
 function invokedRender() {
