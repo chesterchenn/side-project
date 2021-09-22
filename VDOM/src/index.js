@@ -1,4 +1,4 @@
 export { recursion } from "./recursion";
-export { createElement } from "./createElement";
+// export { createElement } from "./createElement";
 export { render } from "./render";
-export { diff } from "./diff";
+export { diff, h, createElement } from "./diff";

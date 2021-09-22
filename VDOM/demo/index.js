@@ -1,4 +1,4 @@
-import { createElement, createElement as h, render, diff } from "vdom";
+import { h, diff, createElement } from "vdom";
 
 let state = { num: 5 };
 let timer;
@@ -19,27 +19,27 @@ function view() {
   );
 }
 
-function tick() {
+function tick(element) {
   if (state.num > 20) {
     clearTimeout(timer);
     return;
   }
   const newVDOM = view();
 
-  // render(newVDOM, renderRoot)
-  diff(preVDom, newVDOM, renderRoot, preVDom);
+  diff(preVDom, newVDOM, element);
 }
 
-function invokedRender() {
+function render(element) {
   const vdom = view();
   preVDom = vdom;
 
-  render(vdom, renderRoot);
+  const dom = createElement(vdom);
+  element.appendChild(dom)
 
   timer = setInterval(() => {
     state.num += 1;
-    tick();
+    tick(element);
   }, 500);
 }
 
-invokedRender();
+render(renderRoot)

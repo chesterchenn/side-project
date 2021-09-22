@@ -1,18 +1,55 @@
-import { createElement } from "./createElement";
-import { render } from "./render";
+function flatten(arr) {
+  return [].concat.apply([], arr);
+}
 
-export const diff = (oldVNode, newVNode, parent, oldVDOM, index = 0) => {
+// 生成vdom
+export function h(type, props, ...children) {
+  return {
+    type,
+    props: props || {},
+    children: flatten(children) || [],
+  };
+}
+
+export function createElement(vdom) {
+  if (typeof vdom === "string" || typeof vdom === "number") {
+    return document.createTextNode(vdom);
+  }
+  const { type, props, children } = vdom;
+
+  // 1. 创建元素
+  const element = document.createElement(type);
+
+  // 2. 属性赋值
+  setProps(element, props);
+
+  // 3. 创建子元素
+  children.map(createElement).forEach(element.appendChild.bind(element));
+
+  return element;
+}
+
+const ATTR_KEY = "__preprops_";
+
+// 属性赋值
+function setProps(element, props) {
+  // 属性赋值
+  element[ATTR_KEY] = props;
+
+  for (let key in props) {
+    element.setAttribute(key, props[key]);
+  }
+}
+
+export const diff = (oldVNode, newVNode, parent, index = 0) => {
+  const element = parent.childNodes[index];
+
   // 新建 node
   if (oldVNode === undefined) {
     console.log("create");
-    console.log(oldVNode, newVNode);
-    Object.assign(oldVDOM, oldVNode)
-    render(oldVDOM, parent);
+    parent.appendChild(createElement(newVNode));
     return;
   }
-
-  // const element = parent.childNodes[index];
-  const element = oldVNode.props.children[index];
 
   // 删除 node
   if (newVNode === undefined) {
@@ -24,18 +61,17 @@ export const diff = (oldVNode, newVNode, parent, oldVDOM, index = 0) => {
   // 替换 node
   if (!isSameType(oldVNode, newVNode)) {
     console.log("repalce");
-    console.log(oldVNode, newVNode, oldVDOM);
-    Object.assign(oldVDOM, oldVNode)
-    render(oldVDOM, parent);
-    return newVNode;
+    parent.replaceChild(createElement(newVNode), element);
+    return;
   }
   // 更新 node
-  if (oldVNode.type !== "TEXT_ELEMENT") {
+  //
+  if (element.nodeType === Node.ELEMENT_NODE) {
     // 比较 props 的变化
-    diffProps(oldVNode, newVNode, parent);
+    diffProps(oldVNode, newVNode, element);
 
     // 比较 children 的变化
-    diffChildren(oldVNode, newVNode, parent, oldVDOM);
+    diffChildren(oldVNode, newVNode, element);
   }
 };
 
@@ -62,22 +98,15 @@ function diffProps(oldVNode, newVNode, element) {
 }
 
 // 比较 children 的变化
-function diffChildren(oldVNode, newVNode, parent, oldVDOM) {
-  // 获取子元素最大长度
+function diffChildren(oldVNode, newVNode, parent) {
   const childLength = Math.max(
-    oldVNode.props.children.length,
-    newVNode.props.children.length
+    oldVNode.children.length,
+    newVNode.children.length
   );
 
   // 遍历并 diff 子元素
   for (let i = 0; i < childLength; i++) {
-    diff(
-      oldVNode.props.children[i],
-      newVNode.props.children[i],
-      parent,
-      oldVDOM,
-      i
-    );
+    diff(oldVNode.children[i], newVNode.children[i], parent, i);
   }
 }
 
